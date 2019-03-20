@@ -14,6 +14,7 @@ class Channels extends Component {
         channelDetails: '',
         channelRef: firebase.database().ref('channels'),
         messagesRef: firebase.database().ref('messages'),
+        typingRef: firebase.database().ref('typing'),
         modal: false,
         firstLoad: true,
         notifications: []
@@ -37,7 +38,7 @@ class Channels extends Component {
     }
 
     addNotificationListener = channelId => {
-        this.state.messagesRef.on('value', snap => {
+        this.state.messagesRef.child(channelId).on('value', snap => {
             if (this.state.channel) {
                 this.handleNotifications(channelId, this.state.channel.id, this.state.notifications, snap);
             }
@@ -72,6 +73,9 @@ class Channels extends Component {
 
     removeListeners = () => {
         this.state.channelRef.off();
+        this.state.channels.forEach(channel => {
+            this.state.messagesRef.child(channel.id).off();
+        })
     }
 
     setFirstChannel = () => {
@@ -93,7 +97,7 @@ class Channels extends Component {
         const newChannel = {
             id: key,
             name: channelName,
-            defaults: channelDetails,
+            details: channelDetails,
             createdBy: {
                 name: user.displayName,
                 avatar: user.photoURL
@@ -126,6 +130,10 @@ class Channels extends Component {
 
     channelChange = channel => {
         this.setActiveChannel(channel);
+        this.state.typingRef
+            .child(this.state.channel.id)
+            .child(this.state.user.uid)
+            .remove();
         this.clearNotifications();
         this.props.setCurrentChannel(channel);
         this.props.setPrivateChannel(false);
@@ -149,11 +157,10 @@ class Channels extends Component {
 
     getNotificationCount = channel => {
         let count = 0;
-        console.log(this.state.notifications);
+
         this.state.notifications.forEach(notification => {
             if (notification.id === channel.id) {
                 count = notification.count;
-                console.log(notification.count);
             }
         });
         if (count > 0) return count;

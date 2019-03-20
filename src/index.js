@@ -17,11 +17,11 @@ import {
 
 import { createStore } from 'redux';
 import { Provider, connect } from 'react-redux';
-import { composeWithDevTools } from 'redux-devtools-extension';
+// import { composeWithDevTools } from 'redux-devtools-extension';
 import rootReducer from './reducers';
 import { setUser, clearUser } from './actions';
 
-const store = createStore(rootReducer, composeWithDevTools());
+const store = createStore(rootReducer);
 
 class Root extends React.Component {
     componentDidMount() {
